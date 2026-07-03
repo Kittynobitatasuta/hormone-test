@@ -5,7 +5,7 @@ st.set_page_config(page_title="Hormone Panel Interpreter", layout="wide")
 
 st.title("🧬 Male Hormone Panel Interpreter")
 st.markdown("แปลผลฮอร์โมนชายแบบครบวงจร — วินิจฉัย · ปรับสมดุล · เฝ้าระวังความปลอดภัย")
-st.markdown("*(อ้างอิง Endocrine Society 2018, AUA 2018, SIAMS/SIE 2022, EAU 2025)*")
+st.markdown("*(อ้างอิง Endocrine Society 2018, AUA 2018, JCEM 2017, EAU 2025)*")
 st.divider()
 
 # --- 2. Input Section ---
@@ -56,14 +56,17 @@ with col_out:
                 c1, c2 = st.columns(2)
 
                 with c1:
+                    # อัปเดตเกณฑ์ Multi-tier: JCEM 2017 + Endocrine 2018
                     if testosterone == 0:
                         st.info("ไม่ได้กรอกค่า Testosterone")
                     elif testosterone >= 4.0:
-                        st.success(f"**Testosterone: {testosterone:.2f} ng/mL** ✅\nอยู่ในเกณฑ์ปกติ-ดี (≥ 4.00 ng/mL)")
+                        st.success(f"**Testosterone: {testosterone:.2f} ng/mL** ✅\nอยู่ในเกณฑ์ปกติ-ดี (Optimal)")
                     elif testosterone >= 2.64:
-                        st.warning(f"**Testosterone: {testosterone:.2f} ng/mL** ⚠️\nอยู่ในเกณฑ์ปกติแต่ค่อนข้างต่ำ (2.64–3.99 ng/mL)\nพิจารณาร่วมกับอาการทางคลินิก")
+                        st.success(f"**Testosterone: {testosterone:.2f} ng/mL** 🟢\nอยู่ในเกณฑ์ปกติ (2.64 - 3.99 ng/mL)")
+                    elif testosterone >= 2.1:
+                        st.warning(f"**Testosterone: {testosterone:.2f} ng/mL** 🟡\nกลุ่ม Borderline/Grey zone (2.1 - 2.64 ng/mL)\nพิจารณารักษาหากมีอาการพร่องฮอร์โมนชัดเจน")
                     else:
-                        st.error(f"**Testosterone: {testosterone:.2f} ng/mL** 🚨\nต่ำกว่าเกณฑ์ (< 2.64 ng/mL)\nสอดคล้องกับภาวะ Hypogonadism")
+                        st.error(f"**Testosterone: {testosterone:.2f} ng/mL** 🔴\nต่ำกว่า 2.5th Percentile (< 2.1 ng/mL)\nเข้าเกณฑ์ Hypogonadism ชัดเจน (JCEM 2017)")
 
                 with c2:
                     if lh == 0:
@@ -77,16 +80,17 @@ with col_out:
 
                 if testosterone > 0 and lh > 0:
                     st.markdown("#### 🧠 Pattern Analysis: T + LH")
+                    # ใช้ 2.64 เป็นเกณฑ์จุดตัดคลินิก (Clinical cut-off) สำหรับแยก Pattern โรค
                     t_low = testosterone < 2.64
                     lh_high = lh >= 9.4
                     lh_low = lh < 1.5
 
                     if t_low and lh_high:
-                        st.error("**Primary Hypogonadism** — T ต่ำ + LH สูง\nอัณฑะตอบสนองต่อสัญญาณ LH ไม่เพียงพอ\n➡️ พิจารณา: Klinefelter, orchitis, trauma, radiation")
+                        st.error("**Primary Hypogonadism** — T ต่ำ/ค่อนข้างต่ำ + LH สูง\nอัณฑะตอบสนองต่อสัญญาณ LH ไม่เพียงพอ\n➡️ พิจารณา: Klinefelter, orchitis, trauma, radiation")
                     elif t_low and lh_low:
-                        st.error("**Secondary Hypogonadism** — T ต่ำ + LH ต่ำ/ปกติ\nปัญหาที่ Pituitary หรือ Hypothalamus\n➡️ พิจารณา: MRI sella, Prolactin, วัด FSH เพิ่มเติม")
+                        st.error("**Secondary Hypogonadism** — T ต่ำ/ค่อนข้างต่ำ + LH ต่ำ/ปกติ\nปัญหาที่ Pituitary หรือ Hypothalamus\n➡️ พิจารณา: MRI sella, Prolactin, วัด FSH เพิ่มเติม")
                     elif t_low and not lh_high and not lh_low:
-                        st.warning("**T ต่ำ + LH ปกติ** — Compensated / Functional\nอาจเกิดจาก Obesity, Metabolic syndrome, ยา\n➡️ พิจารณา SHBG, Free Testosterone")
+                        st.warning("**T ต่ำ/ค่อนข้างต่ำ + LH ปกติ** — Compensated / Functional\nอาจเกิดจาก Obesity, Metabolic syndrome, ยา\n➡️ พิจารณา SHBG, Free Testosterone")
                     elif not t_low and lh_high:
                         st.warning("**Compensated Primary Hypogonadism** — T ปกติ + LH สูง\nอัณฑะยังชดเชยได้แต่ทำงานหนักเกิน\n➡️ Monitor closely, อาจเริ่มลดลงในอนาคต")
                     else:
@@ -180,12 +184,17 @@ with col_out:
             st.markdown("### 📝 สรุปภาพรวม")
             flags = []
 
-            if testosterone > 0 and testosterone < 2.64:
-                flags.append("⚠️ Testosterone ต่ำกว่าเกณฑ์ — พิจารณา TRT")
+            # อัปเดต Summary ให้แยก Flag ตามระดับความรุนแรงของ T
+            if 0 < testosterone < 2.1:
+                flags.append("🔴 Testosterone ต่ำกว่า 2.5th Pct. (< 2.1 ng/mL) — เข้าเกณฑ์ Hypogonadism ชัดเจน")
+            elif 2.1 <= testosterone < 2.64:
+                flags.append("🟡 Testosterone อยู่ในเกณฑ์ Borderline (2.1 - 2.64 ng/mL) — พิจารณารักษาหากมีอาการ")
+            
             if lh > 0 and lh >= 9.4 and testosterone > 0 and testosterone < 2.64:
                 flags.append("🔴 Primary Hypogonadism — ตรวจหาสาเหตุที่อัณฑะ")
             if lh > 0 and lh < 1.5 and testosterone > 0 and testosterone < 2.64:
                 flags.append("🔴 Secondary Hypogonadism — MRI Sella + Prolactin")
+            
             if e2 > 40:
                 flags.append("⚠️ E2 สูง — ประเมิน Aromatization")
             if e2 > 0 and e2 < 10:
@@ -219,6 +228,7 @@ with st.expander("📚 References ทั้งหมด"):
     st.markdown("""
     - **Bhasin S et al.** Testosterone Therapy in Men With Hypogonadism: An Endocrine Society Clinical Practice Guideline. *JCEM* 2018;103(5):1715–1744
     - **Mulhall JP et al.** Evaluation and Management of Testosterone Deficiency: AUA Guideline. *J Urol* 2018;200(2):423–432
+    - **Travison TG et al.** Harmonized Reference Ranges for Circulating Testosterone Levels in Men. *JCEM* 2017;102(4):1161-1173
     - **Zitzmann M et al.** SIAMS/SIE Guidelines on Adult-onset Male Hypogonadism. *PMC9415259* 2022
     - **Ramasamy R et al.** Secondary Polycythemia in Men Receiving Testosterone Therapy Increases Risk of MACE/VTE. *J Urol* 2022
     - **EAU Guidelines on Male Hypogonadism** 2025
