@@ -15,8 +15,8 @@ with col_in:
     st.subheader("📋 กรอกผลเลือด")
 
     st.markdown("**กลุ่มวินิจฉัย**")
-    testosterone = st.number_input("Testosterone (ng/dL)", min_value=0.0, max_value=2000.0, value=0.0, step=1.0)
-    lh = st.number_input("LH (IU/L)", min_value=0.0, max_value=50.0, value=0.0, step=0.1)
+    testosterone = st.number_input("Testosterone (ng/mL)", min_value=0.0, max_value=20.0, value=0.0, step=0.01)
+    lh = st.number_input("LH (mIU/mL)", min_value=0.0, max_value=50.0, value=0.0, step=0.1)
 
     st.markdown("---")
     st.markdown("**กลุ่มปรับสมดุล**")
@@ -52,31 +52,31 @@ with col_out:
                 c1, c2 = st.columns(2)
 
                 with c1:
-                    # Testosterone status
+                    # Testosterone status (ng/mL: 264 ng/dL = 2.64 ng/mL, 400 ng/dL = 4.00 ng/mL)
                     if testosterone == 0:
                         st.info("ไม่ได้กรอกค่า Testosterone")
-                    elif testosterone >= 400:
-                        st.success(f"**Testosterone: {testosterone:.0f} ng/dL** ✅\nอยู่ในเกณฑ์ปกติ-ดี (≥ 400 ng/dL)")
-                    elif testosterone >= 264:
-                        st.warning(f"**Testosterone: {testosterone:.0f} ng/dL** ⚠️\nอยู่ในเกณฑ์ปกติแต่ค่อนข้างต่ำ (264–399 ng/dL)\nพิจารณาร่วมกับอาการทางคลินิก")
+                    elif testosterone >= 4.0:
+                        st.success(f"**Testosterone: {testosterone:.2f} ng/mL** ✅\nอยู่ในเกณฑ์ปกติ-ดี (≥ 4.00 ng/mL)")
+                    elif testosterone >= 2.64:
+                        st.warning(f"**Testosterone: {testosterone:.2f} ng/mL** ⚠️\nอยู่ในเกณฑ์ปกติแต่ค่อนข้างต่ำ (2.64–3.99 ng/mL)\nพิจารณาร่วมกับอาการทางคลินิก")
                     else:
-                        st.error(f"**Testosterone: {testosterone:.0f} ng/dL** 🚨\nต่ำกว่าเกณฑ์ (< 264 ng/dL)\nสอดคล้องกับภาวะ Hypogonadism")
+                        st.error(f"**Testosterone: {testosterone:.2f} ng/mL** 🚨\nต่ำกว่าเกณฑ์ (< 2.64 ng/mL)\nสอดคล้องกับภาวะ Hypogonadism")
 
                 with c2:
-                    # LH status
+                    # LH status (mIU/mL = IU/L numerically identical)
                     if lh == 0:
                         st.info("ไม่ได้กรอกค่า LH")
                     elif lh >= 9.4:
-                        st.error(f"**LH: {lh:.1f} IU/L** 🚨\nสูง (≥ 9.4 IU/L)\nชี้ต่อ Primary Hypogonadism (Testicular failure)")
+                        st.error(f"**LH: {lh:.1f} mIU/mL** 🚨\nสูง (≥ 9.4 mIU/mL)\nชี้ต่อ Primary Hypogonadism (Testicular failure)")
                     elif lh >= 1.5:
-                        st.success(f"**LH: {lh:.1f} IU/L** ✅\nอยู่ในเกณฑ์ปกติ (1.5–9.3 IU/L)")
+                        st.success(f"**LH: {lh:.1f} mIU/mL** ✅\nอยู่ในเกณฑ์ปกติ (1.5–9.3 mIU/mL)")
                     else:
-                        st.warning(f"**LH: {lh:.1f} IU/L** ⚠️\nต่ำ (< 1.5 IU/L)\nชี้ต่อ Secondary Hypogonadism (Pituitary/Hypothalamic)")
+                        st.warning(f"**LH: {lh:.1f} mIU/mL** ⚠️\nต่ำ (< 1.5 mIU/mL)\nชี้ต่อ Secondary Hypogonadism (Pituitary/Hypothalamic)")
 
                 # Combined T + LH interpretation
                 if testosterone > 0 and lh > 0:
                     st.markdown("#### 🧠 Pattern Analysis: T + LH")
-                    t_low = testosterone < 264
+                    t_low = testosterone < 2.64
                     lh_high = lh >= 9.4
                     lh_low = lh < 1.5
 
@@ -111,9 +111,10 @@ with col_out:
 
                 with c2:
                     if testosterone > 0:
-                        # E2:T ratio (both in pg/mL and ng/dL → convert T to ng/dL already)
-                        t_pgml = testosterone * 10  # ng/dL → pg/dL → ÷100 for rough ratio
-                        ratio = (e2 / testosterone) * 100  # E2 pg/mL / T ng/dL × 100
+                        # E2 (pg/mL) / T (ng/mL → ng/dL ×100) × 100
+                        # = E2 pg/mL / (T ng/mL × 100) × 100 = E2 / T
+                        t_ngdl = testosterone * 100  # ng/mL → ng/dL
+                        ratio = (e2 / t_ngdl) * 100  # E2 pg/mL / T ng/dL × 100
                         st.metric("E2:T Ratio (×100)", f"{ratio:.2f}")
                         if ratio > 5:
                             st.warning("E2:T Ratio สูง → Aromatization มาก\nพบบ่อยใน Obesity, Insulin resistance")
@@ -170,11 +171,11 @@ with col_out:
             st.markdown("### 📝 สรุปภาพรวม")
             flags = []
 
-            if testosterone > 0 and testosterone < 264:
+            if testosterone > 0 and testosterone < 2.64:
                 flags.append("⚠️ Testosterone ต่ำกว่าเกณฑ์ — พิจารณา TRT")
-            if lh > 0 and lh >= 9.4 and testosterone > 0 and testosterone < 264:
+            if lh > 0 and lh >= 9.4 and testosterone > 0 and testosterone < 2.64:
                 flags.append("🔴 Primary Hypogonadism — ตรวจหาสาเหตุที่อัณฑะ")
-            if lh > 0 and lh < 1.5 and testosterone > 0 and testosterone < 264:
+            if lh > 0 and lh < 1.5 and testosterone > 0 and testosterone < 2.64:
                 flags.append("🔴 Secondary Hypogonadism — MRI Sella + Prolactin")
             if e2 > 40:
                 flags.append("⚠️ E2 สูง — ประเมิน Aromatization")
