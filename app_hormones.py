@@ -112,17 +112,17 @@ with col_out:
 
                 with c2:
                     if testosterone > 0:
-                        t_ngdl = testosterone * 100
-                        ratio = (e2 / t_ngdl) * 100
-                        st.metric("E2:T Ratio (×100)", f"{ratio:.2f}")
-                        if ratio > 5:
-                            st.warning("E2:T Ratio สูง → Aromatization มาก\nพบบ่อยใน Obesity, Insulin resistance")
-                        elif ratio < 1.5:
-                            st.warning("E2:T Ratio ต่ำ → E2 ไม่เพียงพอ\nพบใน Low body fat หรือ AI use")
+                        t_ngdl = testosterone * 100  # ng/mL → ng/dL
+                        ratio = t_ngdl / e2          # T:E2 = ng/dL / pg/mL
+                        st.metric("T:E2 Ratio", f"{ratio:.1f}")
+                        if ratio < 10:
+                            st.warning("T:E2 ต่ำ (< 10) → Aromatization สูง\nพบบ่อยใน Obesity, Insulin resistance, โรคตับ")
+                        elif ratio > 25:
+                            st.warning("T:E2 สูง (> 25) → E2 ต่ำเกิน\nพบใน Low body fat หรือใช้ AI เกินขนาด")
                         else:
-                            st.success("E2:T Ratio อยู่ในช่วงสมดุล")
+                            st.success("T:E2 Ratio อยู่ในช่วงสมดุล (10–25)")
                     else:
-                        st.info("กรอกค่า Testosterone เพิ่มเติมเพื่อคำนวณ E2:T Ratio")
+                        st.info("กรอกค่า Testosterone เพิ่มเติมเพื่อคำนวณ T:E2 Ratio")
 
                 st.divider()
 
